@@ -5,12 +5,12 @@ import { OrderDto } from '../dto/order-dto'
 import { StatusDto } from '../dto/status-dto'
 
 type Order = {
-  "status": StatusDto,
-  "courierId": number,
-  "customerName": string,
-  "customerPhone": string,
-  "comment": string,
-  "id": number
+  status: StatusDto
+  courierId: number
+  customerName: string
+  customerPhone: string
+  comment: string
+  id: number
 }
 const serviceURL = 'https://backend.tallinn-learning.ee/'
 const loginPath = 'login/student'

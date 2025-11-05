@@ -6,12 +6,11 @@ import {
   deleteOrder,
   getDeletedOrder,
   getAllOrders,
-  getTwoLastOrders,
+  getLastNOrders,
+  deleteAllOrders,
 } from '../../helpers/api-helper'
 import { StatusDto } from '../../dto/status-dto'
 import { OrderDto } from '../../dto/order-dto'
-
-test.describe.configure({ mode: 'serial' })
 
 // defined on test file level for all
 let jwt: string
@@ -23,6 +22,7 @@ test.beforeAll(async ({ request }) => {
 test('login and create order with api-helper', async ({ request }) => {
   const orderId = await createOrder(request, jwt)
   expect.soft(orderId).toBeGreaterThan(0)
+  await deleteOrder(request, jwt, orderId)
 })
 
 test('create order and find order by id', async ({ request }) => {
@@ -31,6 +31,7 @@ test('create order and find order by id', async ({ request }) => {
   const order: OrderDto = await getOrderById(request, jwt, orderId)
   expect.soft(order.id).toBe(orderId)
   expect.soft(order.status).toBe(StatusDto.OPEN)
+  await deleteOrder(request, jwt, orderId)
 })
 
 test('create order and delete order by id and get deleted order', async ({ request }) => {
@@ -40,32 +41,43 @@ test('create order and delete order by id and get deleted order', async ({ reque
   await getDeletedOrder(request, jwt, orderId)
 })
 
-test('Create two orders and get two last orders from all the list', async ({ request }) => {
+test('Create several orders and get last N orders', async ({ request }) => {
+  await deleteAllOrders(request, jwt)
+
   const orderIdFirst = await createOrder(request, jwt)
   const orderIdSecond = await createOrder(request, jwt)
-  const allOrders: OrderDto[] = await getTwoLastOrders(request, jwt)
-  expect(allOrders.length).toBe(2)
+  const orderIdThird = await createOrder(request, jwt)
 
-  const receivedIds = [allOrders[0].id, allOrders[1].id]
+  const lastOrders: OrderDto[] = await getLastNOrders(request, jwt, 3)
+  expect(lastOrders.length).toBe(3)
+
+  const receivedIds: number[] = [
+    Number(lastOrders[0].id),
+    Number(lastOrders[1].id),
+    Number(lastOrders[2].id),
+  ]
   expect(receivedIds).toContain(orderIdFirst)
   expect(receivedIds).toContain(orderIdSecond)
+  expect(receivedIds).toContain(orderIdThird)
 
-  expect.soft(allOrders[0].status).toBe(StatusDto.OPEN)
-  expect.soft(allOrders[1].status).toBe(StatusDto.OPEN)
+  expect.soft(lastOrders[0].status).toBe(StatusDto.OPEN)
+  expect.soft(lastOrders[1].status).toBe(StatusDto.OPEN)
+  expect.soft(lastOrders[2].status).toBe(StatusDto.OPEN)
 
-  //console.log(allOrders[0], allOrders[1])
+  await deleteOrder(request, jwt, orderIdFirst)
+  await deleteOrder(request, jwt, orderIdSecond)
+  await deleteOrder(request, jwt, orderIdThird)
 })
 
-test('Student creates order and verifies it in all orders list - the last one', async ({
-  request,
-}) => {
+test('Student creates order and verifies it in orders list', async ({ request }) => {
   const orderId = await createOrder(request, jwt)
   const retrieveOrder = await getOrderById(request, jwt, orderId)
   expect(retrieveOrder.id).toBe(orderId)
   expect(retrieveOrder.status).toBe(StatusDto.OPEN)
 
   const allOrders = await getAllOrders(request, jwt)
+  const allReceivedIds: number[] = allOrders.map((order) => Number(order.id))
 
-  const lastOrderIndex = allOrders.length - 1
-  expect(allOrders[lastOrderIndex].id).toBe(orderId)
+  expect(allReceivedIds).toContain(orderId)
+  await deleteOrder(request, jwt, orderId)
 })

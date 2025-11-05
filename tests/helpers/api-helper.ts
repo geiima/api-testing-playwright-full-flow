@@ -88,9 +88,10 @@ export async function getDeletedOrder(
   expect(data).toBe('')
 }
 
-export async function getTwoLastOrders(
+export async function getLastNOrders(
   request: APIRequestContext,
   jwt: string,
+  count: number,
 ): Promise<OrderDto[]> {
   const response = await request.get(`${serviceURL}${orderPath}`, {
     headers: {
@@ -100,29 +101,18 @@ export async function getTwoLastOrders(
   expect(response.status()).toBe(StatusCodes.OK)
   const data: Order[] = await response.json()
 
-  const lastIndex = data.length - 1
-  const secondToLastIndex = data.length - 2
-
-  const item1 = data[secondToLastIndex]
-  const item2 = data[lastIndex]
-
-  const order1 = new OrderDto(
-    item1.status,
-    item1.courierId,
-    item1.customerName,
-    item1.customerPhone,
-    item1.comment,
-    item1.id,
+  const lastNOrders = data.slice(-count)
+  return lastNOrders.map(
+    (item) =>
+      new OrderDto(
+        item.status,
+        item.courierId,
+        item.customerName,
+        item.customerPhone,
+        item.comment,
+        item.id,
+      ),
   )
-  const order2 = new OrderDto(
-    item2.status,
-    item2.courierId,
-    item2.customerName,
-    item2.customerPhone,
-    item2.comment,
-    item2.id,
-  )
-  return [order1, order2]
 }
 
 export async function getAllOrders(request: APIRequestContext, jwt: string): Promise<OrderDto[]> {
@@ -133,4 +123,12 @@ export async function getAllOrders(request: APIRequestContext, jwt: string): Pro
   })
   expect(response.status()).toBe(StatusCodes.OK)
   return await response.json()
+}
+
+export async function deleteAllOrders(request: APIRequestContext, jwt: string): Promise<void> {
+  const allOrders = await getAllOrders(request, jwt)
+
+  for (const order of allOrders) {
+    await deleteOrder(request, jwt, Number(order.id))
+  }
 }

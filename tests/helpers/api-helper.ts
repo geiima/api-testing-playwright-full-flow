@@ -19,6 +19,7 @@ const orderPath = 'orders'
 const assignPath = 'assign'
 const statusPath = 'status'
 
+
 export async function fetchJwt(request: APIRequestContext): Promise<string> {
   const authResponse = await request.post(`${serviceURL}${loginPath}`, {
     data: LoginDto.createLoginWithCorrectData(),

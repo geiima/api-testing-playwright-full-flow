@@ -15,3 +15,4 @@ export class LoginDto {
     return new LoginDto(process.env.COURIER_USER || '', process.env.COURIER_PASSWORD || '')
   }
 }
+

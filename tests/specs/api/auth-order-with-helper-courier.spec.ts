@@ -22,6 +22,4 @@ test('Create order, assign it to courier and change status', async ({ request })
   const deliveredOrder = await updateOrderStatus(request, courierJwt, orderId, StatusDto.DELIVERED)
   expect.soft(deliveredOrder.id).toBe(orderId)
   expect.soft(deliveredOrder.status).toBe('DELIVERED')
-
-  //await deleteOrder(request, jwt, orderId)
 })

@@ -14,11 +14,24 @@ type Order = {
 }
 const serviceURL = 'https://backend.tallinn-learning.ee/'
 const loginPath = 'login/student'
+const courierLoginPath = 'login/courier'
 const orderPath = 'orders'
+const assignPath = 'assign'
+const statusPath = 'status'
 
 export async function fetchJwt(request: APIRequestContext): Promise<string> {
   const authResponse = await request.post(`${serviceURL}${loginPath}`, {
     data: LoginDto.createLoginWithCorrectData(),
+  })
+  if (authResponse.status() !== StatusCodes.OK) {
+    throw new Error(`Authorization failed. Status: ${authResponse.status()}`)
+  }
+  return await authResponse.text()
+}
+
+export async function fetchCourierJwt(request: APIRequestContext): Promise<string> {
+  const authResponse = await request.post(`${serviceURL}${courierLoginPath}`, {
+    data: LoginDto.createCourierLoginData(),
   })
   if (authResponse.status() !== StatusCodes.OK) {
     throw new Error(`Authorization failed. Status: ${authResponse.status()}`)
@@ -131,4 +144,40 @@ export async function deleteAllOrders(request: APIRequestContext, jwt: string): 
   for (const order of allOrders) {
     await deleteOrder(request, jwt, Number(order.id))
   }
+}
+
+export async function assignOrderToCourier(
+  request: APIRequestContext,
+  jwt: string,
+  orderId: number,
+): Promise<OrderDto> {
+  const response = await request.put(`${serviceURL}${orderPath}/${orderId}/${assignPath}`, {
+    headers: {
+      Authorization: `Bearer ${jwt}`,
+    },
+  })
+  expect(response.status()).toBe(StatusCodes.OK)
+  const body = await response.json()
+  expect(body.id).toBe(orderId)
+  expect(body.status).toBe('ACCEPTED')
+  return body
+}
+
+export async function updateOrderStatus(
+  request: APIRequestContext,
+  jwt: string,
+  orderId: number,
+  newStatus: string,
+): Promise<OrderDto> {
+  const response = await request.put(`${serviceURL}${orderPath}/${orderId}/${statusPath}`, {
+    data: { status: newStatus },
+    headers: {
+      Authorization: `Bearer ${jwt}`,
+    },
+  })
+  expect(response.status()).toBe(StatusCodes.OK)
+  const body = await response.json()
+  expect(body.id).toBe(orderId)
+  expect(body.status).toBe(newStatus)
+  return body
 }

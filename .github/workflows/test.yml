@@ -43,6 +43,8 @@ jobs:
         env:
           USER: ${{ secrets.USER }}
           PASSWORD: ${{ secrets.PASSWORD }}
+          COURIER_USER: ${{ secrets.COURIER_USER }}
+          COURIER_PASSWORD: ${{ secrets.COURIER_PASSWORD }}
         run: |
           echo "Running Playwright to execute API tests..."
           npx playwright test  
